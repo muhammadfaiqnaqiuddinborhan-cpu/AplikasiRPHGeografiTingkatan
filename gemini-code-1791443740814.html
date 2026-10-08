@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>River Guardians: Misi Kelestarian Sungai</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --accent: #f59e0b;
+      --bg-sky: #e0f2fe;
+      --card-bg: #ffffff;
+      --text-dark: #1e293b;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #bae6fd 0%, #e0f2fe 100%);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      margin-bottom: 20px;
+    }
+
+    .app-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-badge {
+      background: #f0f9ff;
+      border: 1px solid #7dd3fc;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .score-badge {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #b45309;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Screen Elements */
+    h2 {
+      color: var(--primary-dark);
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    p {
+      line-height: 1.6;
+      margin-bottom: 15px;
+      color: #334155;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .btn-success:hover {
+      background: #16a34a;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      outline: none;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* Step 1 Visual Comparison */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .river-card {
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .river-clean {
+      background: #dcfce7;
+      border-color: #86efac;
+    }
+
+    .river-dirty {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    .river-card:hover {
+      transform: scale(1.02);
+    }
+
+    .river-img {
+      font-size: 4rem;
+      margin-bottom: 10px;
+    }
+
+    /* Drag & Drop / Selection Game */
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 15px 0;
+    }
+
+    .action-card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .action-card:hover {
+      border-color: var(--primary);
+      background: #f0f9ff;
+    }
+
+    .action-card.selected-positive {
+      background: #dcfce7;
+      border-color: var(--success);
+      color: #15803d;
+    }
+
+    .action-card.selected-negative {
+      background: #fee2e2;
+      border-color: var(--danger);
+      color: #b91c1c;
+    }
+
+    /* Pair Chat Mock */
+    .chat-box {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 15px;
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+    }
+
+    .chat-partner {
+      background: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .chat-user {
+      background: #0284c7;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .badge-icon {
+      font-size: 3rem;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="app-title">
+        🌊 River Guardians
+      </div>
+      <div id="userStats" style="display: none; gap: 10px; align-items: center;">
+        <span class="user-badge" id="displayName">Murid</span>
+        <span class="score-badge" id="displayScore">⭐ 0 XP</span>
+      </div>
+    </header>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- SCREEN 0: LOGIN -->
+    <div id="screenLogin" class="screen active">
+      <div style="text-align: center; padding: 20px 0;">
+        <div style="font-size: 5rem; margin-bottom: 10px;">🏞️</div>
+        <h2>Selamat Datang, Wira Sungai!</h2>
+        <p>Mari sertai misi melestarikan sungai kita (Geografi Tingkatan 4 - 2.5).</p>
+        <div style="max-width: 320px; margin: 0 auto;">
+          <input type="text" id="usernameInput" placeholder="Masukkan nama anda..." />
+          <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="startGame()">Mula Misi 🚀</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: INDUCTION / WARM-UP -->
+    <div id="screenStep1" class="screen">
+      <h2>Langkah 1: Perbandingan Sungai 🔍</h2>
+      <p>Bandingkan dua keadaan sungai di bawah. Pilih gambar sungai yang <b>SIHAT & LESTARI</b>:</p>
+      
+      <div class="compare-container">
+        <div class="river-card river-dirty" onclick="selectRiver('dirty')">
+          <div class="river-img">🏭🗑️</div>
+          <h3>Sungai A</h3>
+          <p>Berbau, air keruh, banyak sampah sarap.</p>
+        </div>
+        <div class="river-card river-clean" onclick="selectRiver('clean')">
+          <div class="river-img">🐟🌿</div>
+          <h3>Sungai B</h3>
+          <p>Air jernih, ada ikan, tebing hijau dan bersih.</p>
+        </div>
+      </div>
+      <div id="feedbackStep1"></div>
+    </div>
+
+    <!-- STEP 2: LESSON / CONCEPT IDENTIFICATION -->
+    <div id="screenStep2" class="screen">
+      <h2>Langkah 2: Usaha Melestarikan Sungai 🛡️</h2>
+      <p>Pilih <b>TIGA (3)</b> usaha yang BETUL untuk melestarikan dan memelihara sungai:</p>
+      
+      <div class="items-grid" id="actionGrid">
+        <div class="action-card" onclick="toggleAction(this, true)">🗑️ Memasang perangkap sampah (Log Boom)</div>
+        <div class="action-card" onclick="toggleAction(this, false)">🏭 Membuang sisa toksik kilang ke dalam sungai</div>
+        <div class="action-card" onclick="toggleAction(this, true)">🌱 Menanam pokok di tebing sungai</div>
+        <div class="action-card" onclick="toggleAction(this, false)">🚜 Meneroka tanah tanpa kawalan di hulu sungai</div>
+        <div class="action-card" onclick="toggleAction(this, true)">💧 Merawat air sisa sebelum dilepaskan</div>
+        <div class="action-card" onclick="toggleAction(this, false)">🚯 Membuang sampah domestik dari jambatan</div>
+      </div>
+
+      <button class="btn" onclick="checkStep2()">Sahkan Jawapan ✨</button>
+      <div id="feedbackStep2" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- STEP 3: THINK-PAIR-SHARE (PAK-21) -->
+    <div id="screenStep3" class="screen">
+      <h2>Langkah 3: Think-Pair-Share 💬</h2>
+      <p>Rakan pasangan anda (<b>Rakan AI: Adam</b>) mahu berbincang tentang kepentingan dan cara menjaga sungai.</p>
+
+      <div class="chat-box" id="chatBox">
+        <div class="chat-bubble chat-partner">
+          <b>Adam:</b> Hai! Mengapa kita perlu melestarikan sungai? Apa cadangan utama anda?
+        </div>
+      </div>
+
+      <textarea id="userChatInput" rows="2" placeholder="Taip jawapan anda (Contoh: Menjamin bekalan air bersih / Mengelakkan banjir)..."></textarea>
+      <button class="btn" onclick="sendChatMessage()">Hantar Perbincangan 📤</button>
+    </div>
+
+    <!-- STEP 4: PRESENTATION / QUICK RECAP -->
+    <div id="screenStep4" class="screen">
+      <h2>Langkah 4: Pembentangan Ringkas 🎤</h2>
+      <p>Lengkapkan ringkasan idea anda sebelum dibentangkan kepada kelas:</p>
+
+      <div style="background: #f8fafc; border: 2px dashed #cbd5e1; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+        <p><b>Nota Pembentangan <span id="recapName"></span>:</b></p>
+        <p>1. Usaha melestarikan sungai: <b id="recapActions">Belum dipilih</b></p>
+        <p>2. Kepentingan utama: <b id="recapReason">Belum ditulis</b></p>
+      </div>
+
+      <p>Adakah anda bersedia untuk membentangkan jawapan ini?</p>
+      <button class="btn btn-success" onclick="finishPresentation()">Saya Bersedia! 🎉</button>
+    </div>
+
+    <!-- STEP 5: FINAL QUIZ (REINFORCEMENT) -->
+    <div id="screenStep5" class="screen">
+      <h2>Langkah 5: Latihan Pengukuhan 📝</h2>
+      <p>Jawab soalan berikut untuk menguji pemahaman anda:</p>
+
+      <div style="margin-bottom: 20px;">
+        <p><b>Soalan 1: Apakah fungsi utama perangkap sampah (Log Boom)?</b></p>
+        <div class="items-grid">
+          <div class="action-card" onclick="selectQuiz(1, true, this)">Mengumpul sampah terapung di permukaan sungai</div>
+          <div class="action-card" onclick="selectQuiz(1, false, this)">Membunuh bakteria dalam air</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <p><b>Soalan 2: Apakah kesan jika hutan di hulu sungai ditebang tanpa kawalan?</b></p>
+        <div class="items-grid">
+          <div class="action-card" onclick="selectQuiz(2, true, this)">Hakisan tanah berlaku dan air menjadi keruh</div>
+          <div class="action-card" onclick="selectQuiz(2, false, this)">Aliran air sungai menjadi jernih</div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="checkQuiz()">Hantar Latihan 🏁</button>
+      <div id="feedbackQuiz" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- SUMMARY / BADGE SCREEN -->
+    <div id="screenFinal" class="screen" style="text-align: center;">
+      <div class="badge-icon">🏆</div>
+      <h2>Tahniah, <span id="finalUser"></span>!</h2>
+      <p style="font-size: 1.2rem;">Anda telah berjaya menamatkan Misi Kelestarian Sungai!</p>
+
+      <div style="background: #f0f9ff; border: 2px solid #0284c7; padding: 20px; border-radius: 15px; margin: 20px 0;">
+        <h3 style="color: var(--primary-dark);">Mata XP Keseluruhan</h3>
+        <p style="font-size: 2.5rem; font-weight: 800; color: #d97706;" id="finalScore">0 XP</p>
+        <p><b>Sijil Digital:</b> Wira Kelestarian Sungai Tingkatan 4 🌟</p>
+      </div>
+
+      <button class="btn btn-success" onclick="location.reload()">Main Semula 🔄</button>
+    </div>
+
+  </div>
+
+  <script>
+    // State management
+    let username = '';
+    let score = 0;
+    let selectedActions = [];
+    let userReason = '';
+    let quizAnswers = { q1: null, q2: null };
+
+    function updateScore(points) {
+      score += points;
+      document.getElementById('displayScore').innerText = `⭐ ${score} XP`;
+    }
+
+    function setProgress(percent) {
+      document.getElementById('progressFill').style.width = percent + '%';
+    }
+
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    // Login
+    function startGame() {
+      const input = document.getElementById('usernameInput').value.trim();
+      if (!input) {
+        alert('Sila masukkan nama anda terlebih dahulu.');
+        return;
+      }
+      username = input;
+      document.getElementById('displayName').innerText = username;
+      document.getElementById('recapName').innerText = username;
+      document.getElementById('userStats').style.display = 'flex';
+      
+      setProgress(10);
+      goToScreen('screenStep1');
+    }
+
+    // Step 1
+    function selectRiver(type) {
+      const fb = document.getElementById('feedbackStep1');
+      if (type === 'clean') {
+        fb.innerHTML = `<div style="color: green; font-weight: bold; margin-top: 10px;">Tahniah! Sungai B adalah sungai yang lestari, jernih dan bebas pencemaran. (+20 XP)</div>
+        <button class="btn" style="margin-top: 10px;" onclick="finishStep1()">Teruskan ke Langkah 2 ➡️</button>`;
+        updateScore(20);
+      } else {
+        fb.innerHTML = `<div style="color: red; font-weight: bold; margin-top: 10px;">Cuba lagi! Sungai A teruk dicemari sampah dan sisa industri.</div>`;
+      }
+    }
+
+    function finishStep1() {
+      setProgress(30);
+      goToScreen('screenStep2');
+    }
+
+    // Step 2
+    function toggleAction(card, isCorrect) {
+      const text = card.innerText;
+      if (card.classList.contains('selected-positive') || card.classList.contains('selected-negative')) {
+        card.classList.remove('selected-positive', 'selected-negative');
+        selectedActions = selectedActions.filter(a => a.text !== text);
+      } else {
+        if (isCorrect) {
+          card.classList.add('selected-positive');
+        } else {
+          card.classList.add('selected-negative');
+        }
+        selectedActions.push({ text: text, isCorrect: isCorrect });
+      }
+    }
+
+    function checkStep2() {
+      const correctCount = selectedActions.filter(a => a.isCorrect).length;
+      const incorrectCount = selectedActions.filter(a => !a.isCorrect).length;
+      const fb = document.getElementById('feedbackStep2');
+
+      if (correctCount === 3 && incorrectCount === 0) {
+        fb.innerHTML = `<div style="color: green; font-weight: bold;">Sangat Bagus! Anda berjaya memilih 3 usaha kelestarian sungai yang tepat. (+30 XP)</div>
+        <button class="btn" style="margin-top: 10px;" onclick="finishStep2()">Teruskan ke Think-Pair-Share ➡️</button>`;
+        updateScore(30);
+      } else {
+        fb.innerHTML = `<div style="color: red; font-weight: bold;">Sila pilih betul-betul TIGA (3) usaha yang mesra alam sahaja.</div>`;
+      }
+    }
+
+    function finishStep2() {
+      setProgress(50);
+      goToScreen('screenStep3');
+    }
+
+    // Step 3
+    function sendChatMessage() {
+      const input = document.getElementById('userChatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      userReason = text;
+      const chatBox = document.getElementById('chatBox');
+
+      // User Message
+      const userBubble = document.createElement('div');
+      userBubble.className = 'chat-bubble chat-user';
+      userBubble.innerText = text;
+      chatBox.appendChild(userBubble);
+
+      input.value = '';
+
+      // Reply from Partner AI
+      setTimeout(() => {
+        const partnerBubble = document.createElement('div');
+        partnerBubble.className = 'chat-bubble chat-partner';
+        partnerBubble.innerHTML = `<b>Adam:</b> Wah, cadangan yang sangat bernilai! Usaha itu penting untuk generasi akan datang. 👍 (+20 XP)`;
+        chatBox.appendChild(partnerBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        updateScore(20);
+
+        setTimeout(() => {
+          setProgress(70);
+          prepareRecap();
+          goToScreen('screenStep4');
+        }, 1500);
+      }, 800);
+    }
+
+    // Step 4
+    function prepareRecap() {
+      const actionsText = selectedActions.map(a => a.text).join(', ');
+      document.getElementById('recapActions').innerText = actionsText;
+      document.getElementById('recapReason').innerText = userReason;
+    }
+
+    function finishPresentation() {
+      updateScore(20);
+      setProgress(85);
+      goToScreen('screenStep5');
+    }
+
+    // Step 5
+    function selectQuiz(qNum, isCorrect, elem) {
+      const parent = elem.parentElement;
+      parent.querySelectorAll('.action-card').forEach(c => c.style.border = '2px solid #e2e8f0');
+      elem.style.border = '2px solid #0284c7';
+      quizAnswers[`q${qNum}`] = isCorrect;
+    }
+
+    function checkQuiz() {
+      const fb = document.getElementById('feedbackQuiz');
+      if (quizAnswers.q1 === true && quizAnswers.q2 === true) {
+        fb.innerHTML = `<div style="color: green; font-weight: bold;">Cemerlang! Semua jawapan anda betul. (+30 XP)</div>
+        <button class="btn btn-success" style="margin-top: 10px;" onclick="showFinal()">Lihat Keputusan Akhir 🏆</button>`;
+        updateScore(30);
+      } else {
+        fb.innerHTML = `<div style="color: red; font-weight: bold;">Ada jawapan yang kurang tepat. Cuba semak semula pilihan anda!</div>`;
+      }
+    }
+
+    function showFinal() {
+      setProgress(100);
+      document.getElementById('finalUser').innerText = username;
+      document.getElementById('finalScore').innerText = `${score} XP`;
+      goToScreen('screenFinal');
+    }
+  </script>
+</body>
+</html>
